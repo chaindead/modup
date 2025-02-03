@@ -1,16 +1,12 @@
 package deps
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/Masterminds/semver/v3"
 )
@@ -22,6 +18,7 @@ type Module struct {
 	Latest         *semver.Version
 	IsTool         bool
 	UpdateCategory string // "minor" | "patch" | "prerelease" | "metadata"
+	Updatable      bool
 }
 
 // goListModule mirrors a subset of fields from `go list -u -m -json` output
@@ -34,22 +31,6 @@ type goListModule struct {
 		Path    string `json:"Path"`
 		Version string `json:"Version"`
 	} `json:"Update"`
-}
-
-// DiscoverOutdated returns non-main, non-indirect modules that have updates available
-func DiscoverOutdated() ([]Module, error) {
-	args := []string{"list", "-u", "-m", "-json", "all"}
-	cmd := exec.Command("go", args...)
-	cmd.Env = append(os.Environ(), "GOWORK=off")
-	out, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("go list failed: %w", err)
-	}
-	mods, err := parseGoListJSON(string(out))
-	if err != nil {
-		return nil, err
-	}
-	return mods, nil
 }
 
 // ToolsSupported returns whether `go tool` upgrades can be inspected (Go>=1.24)
@@ -127,27 +108,6 @@ func DiscoverToolUpdates() ([]Module, error) {
 	return result, nil
 }
 
-// CountModules returns total number of modules in the current workspace/module
-func CountModules() (int, error) {
-	cmd := exec.Command("go", "list", "-m", "-f", "{{.Path}}", "all")
-	cmd.Env = append(os.Environ(), "GOWORK=off")
-	out, err := cmd.Output()
-	if err != nil {
-		return 0, fmt.Errorf("count modules failed: %w", err)
-	}
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	count := 0
-	for _, l := range lines {
-		if strings.TrimSpace(l) != "" {
-			count++
-		}
-	}
-	if count == 0 {
-		return 0, fmt.Errorf("no modules found")
-	}
-	return count, nil
-}
-
 // ListAllModulePaths returns all module paths in the current context
 func ListAllModulePaths() ([]string, error) {
 	cmd := exec.Command("go", "list", "-m", "-f", "{{.Path}}", "all")
@@ -167,104 +127,37 @@ func ListAllModulePaths() ([]string, error) {
 	return paths, nil
 }
 
-// DiscoverOutdatedWithProgress discovers outdated modules and reports progress per processed module
-func DiscoverOutdatedWithProgress(progress chan<- int) ([]Module, error) {
-	paths, err := ListAllModulePaths()
+func GetModuleInfo(path string) (Module, error) {
+	cmd := exec.Command("go", "list", "-m", "-u", "-json", path)
+	cmd.Env = append(os.Environ(), "GOWORK=off")
+	out, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		return Module{Path: path}, err
 	}
-	type res struct {
-		m  Module
-		ok bool
+
+	var m goListModule
+	if e := json.Unmarshal(out, &m); e != nil {
+		return Module{Path: path}, e
 	}
-	results := make(chan res, len(paths))
-	// limit concurrency to avoid overwhelming network
-	const maxWorkers = 8
-	sem := make(chan struct{}, maxWorkers)
-	var wg sync.WaitGroup
-	for _, p := range paths {
-		path := p
-		wg.Add(1)
-		sem <- struct{}{}
-		go func() {
-			defer wg.Done()
-			defer func() { <-sem }()
-			cmd := exec.Command("go", "list", "-m", "-u", "-json", path)
-			cmd.Env = append(os.Environ(), "GOWORK=off")
-			out, err := cmd.Output()
-			if progress != nil {
-				select {
-				case progress <- 1:
-				default:
-				}
-			}
-			if err != nil {
-				results <- res{ok: false}
-				return
-			}
-			var m goListModule
-			if e := json.Unmarshal(out, &m); e != nil {
-				results <- res{ok: false}
-				return
-			}
-			if m.Main || m.Indirect || m.Update == nil || m.Update.Version == "" {
-				results <- res{ok: false}
-				return
-			}
-			fromV, e1 := semver.NewVersion(stripV(m.Version))
-			toV, e2 := semver.NewVersion(stripV(m.Update.Version))
-			if e1 != nil || e2 != nil {
-				results <- res{ok: false}
-				return
-			}
-			results <- res{m: Module{Path: m.Path, Current: fromV, Latest: toV, UpdateCategory: categorize(fromV, toV)}, ok: true}
-		}()
+	if m.Main || m.Indirect || m.Update == nil || m.Update.Version == "" {
+		return Module{Path: path}, nil
 	}
-	go func() { wg.Wait(); close(results) }()
-	var modules []Module
-	for r := range results {
-		if r.ok {
-			modules = append(modules, r.m)
-		}
+
+	fromV, e1 := semver.NewVersion(stripV(m.Version))
+	toV, e2 := semver.NewVersion(stripV(m.Update.Version))
+	if e1 != nil || e2 != nil {
+		return Module{Path: path}, nil
 	}
-	return modules, nil
+
+	return Module{
+		Path:           m.Path,
+		Current:        fromV,
+		Latest:         toV,
+		UpdateCategory: categorize(fromV, toV),
+		Updatable:      true,
+	}, nil
 }
 
-func parseGoListJSON(data string) ([]Module, error) {
-	dec := json.NewDecoder(bufio.NewReader(strings.NewReader(data)))
-	var modules []Module
-	for {
-		var m goListModule
-		if err := dec.Decode(&m); err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			// The output may contain concatenated JSON objects without commas; try to recover
-			return nil, fmt.Errorf("parse go list json: %w", err)
-		}
-		if m.Main || m.Indirect {
-			continue
-		}
-		if m.Update == nil || m.Update.Version == "" {
-			continue
-		}
-		fromV, err := semver.NewVersion(stripV(m.Version))
-		if err != nil {
-			continue
-		}
-		toV, err := semver.NewVersion(stripV(m.Update.Version))
-		if err != nil {
-			continue
-		}
-		modules = append(modules, Module{
-			Path:           m.Path,
-			Current:        fromV,
-			Latest:         toV,
-			UpdateCategory: categorize(fromV, toV),
-		})
-	}
-	return modules, nil
-}
 func stripV(v string) string {
 	return strings.TrimPrefix(v, "v")
 }
