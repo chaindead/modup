@@ -29,14 +29,9 @@ go install github.com/chaindead/modup@latest
 
 ### Usage
 
-Run inside a Go module:
+Run inside a Go project:
 
 ```bash
 modup
 ```
-
-### License
-
-MIT — see `./LICENSE`.
-
 
