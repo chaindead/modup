@@ -13,9 +13,10 @@ import (
 type model struct {
 	mode int
 	// scan mode
-	packages []string
+	packages modules
 	index    int
 	modules  []deps.Module
+	scanning []string
 
 	// choose mode
 	list  list.Model
@@ -47,6 +48,7 @@ func NewModel() model {
 	return model{
 		spinner:  s,
 		progress: p,
+		scanning: nil,
 	}
 }
 
