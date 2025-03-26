@@ -61,36 +61,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.scanning = append(m.scanning, pkg)
 		return m, getPkgInfo(pkg)
 	case getPackageInfoMsg:
-		m.index++
-		if msg.mod.Updatable {
-			m.modules = append(m.modules, msg.mod)
-		}
+		m.packages.current++
 
 		pkg := msg.mod.Path
 		mark := checkMark
+		m.scanning = remove(m.scanning, msg.mod.Path)
+
 		if msg.err != nil {
 			pkg = fmt.Sprintf("%s (%s)", msg.mod.Path, msg.err.Error())
 			mark = failMark
 		}
 
-		if m.packages.cnt == m.index {
+		if msg.mod.Updatable {
+			m.modules = append(m.modules, msg.mod)
+		}
+
+		if m.packages.isFinished() {
 			return m, tea.Sequence(
 				textPrint("%s %s", mark, pkg),
 				changeModeList(),
 			)
 		}
 
-		progressCmd := m.progress.SetPercent(float64(m.index) / float64(m.packages.cnt))
-
-		// remove from scanning
-		if pkg != "" {
-			for i, p := range m.scanning {
-				if p == pkg {
-					m.scanning = append(m.scanning[:i], m.scanning[i+1:]...)
-					break
-				}
-			}
-		}
+		progressCmd := m.progress.SetPercent(m.packages.progressFloat())
 
 		return m, tea.Batch(progressCmd, textPrint("%s %s", mark, pkg), moduleStartedCmd())
 

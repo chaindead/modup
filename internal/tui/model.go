@@ -14,7 +14,6 @@ type model struct {
 	mode int
 	// scan mode
 	packages modules
-	index    int
 	modules  []deps.Module
 	scanning []string
 
