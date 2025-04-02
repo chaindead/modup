@@ -34,20 +34,20 @@ func (m model) viewScan() string {
 	pkgCount := fmt.Sprintf(" %*d/%*d", w, m.packages.current, w, n)
 	prog := m.progress.View()
 
-	header := prog + pkgCount
-
 	var lines []string
-	if len(m.scanning) == 0 {
-		lines = append(lines, "Loading modules list")
-	} else {
-		for _, p := range m.scanning {
-			name := currentPkgNameStyle.Render(p)
-			lines = append(lines, m.spinner.View()+" Scanning "+name)
-		}
+	for _, p := range m.scanning {
+		name := currentPkgNameStyle.Render(p)
+		lines = append(lines, m.spinner.View()+" Scanning "+name)
 	}
 
 	body := strings.Join(lines, "\n")
-	return header + "\n" + body
+
+	// bottom-right align progress and counter
+	footer := prog + pkgCount
+	cellsRemaining := max(0, m.width-lipgloss.Width(footer))
+	gap := strings.Repeat(" ", cellsRemaining)
+
+	return body + "\n" + gap + footer
 }
 
 func (m model) viewList() string {

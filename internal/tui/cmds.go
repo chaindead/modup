@@ -58,9 +58,9 @@ func getPkgInfo(pkg string) tea.Cmd {
 type changeModeListMsg bool
 
 func changeModeList() tea.Cmd {
-	return func() tea.Msg {
+	return tea.Tick(time.Second/2, func(time.Time) tea.Msg {
 		return changeModeListMsg(true)
-	}
+	})
 }
 
 type beginUpgradeMsg struct {
