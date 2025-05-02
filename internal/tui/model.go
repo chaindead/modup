@@ -52,5 +52,8 @@ func NewModel() model {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(getPackageList(), m.spinner.Tick)
+	return tea.Batch(
+		stepPrint("Loading packages list"),
+		getPackageList(),
+		m.spinner.Tick)
 }
