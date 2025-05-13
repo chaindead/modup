@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var workerCnt = pflag.UintP("parallel", "p", 10, "number of concurrent api calls")
+var workerCnt = pflag.UintP("parallel", "p", 20, "number of concurrent api calls")
 
 type modules struct {
 	current int
