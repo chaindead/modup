@@ -1,0 +1,541 @@
+package tui
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+
+	"github.com/Masterminds/semver/v3"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/spf13/pflag"
+
+	"github.com/chaindead/modup/internal/deps"
+)
+
+const testDelay = time.Second / 100
+
+var (
+	test = pflag.Bool("test", false, "fake run")
+
+	fakeDeps = map[string]deps.Module{
+		"github.com/gin-gonic/gin": {
+			Path:           "github.com/gin-gonic/gin",
+			Current:        mustParseVersion("1.9.1"),
+			Latest:         mustParseVersion("1.9.2"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/spf13/cobra": {
+			Path:           "github.com/spf13/cobra",
+			Current:        mustParseVersion("1.7.0"),
+			Latest:         mustParseVersion("1.8.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/charmbracelet/bubbletea": {
+			Path:           "github.com/charmbracelet/bubbletea",
+			Current:        mustParseVersion("0.24.0"),
+			Latest:         mustParseVersion("0.25.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/charmbracelet/lipgloss": {
+			Path:           "github.com/charmbracelet/lipgloss",
+			Current:        mustParseVersion("0.7.1"),
+			Latest:         mustParseVersion("0.8.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/Masterminds/semver/v3": {
+			Path:           "github.com/Masterminds/semver/v3",
+			Current:        mustParseVersion("3.2.0"),
+			Latest:         mustParseVersion("3.2.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/mux": {
+			Path:           "github.com/gorilla/mux",
+			Current:        mustParseVersion("1.8.0"),
+			Latest:         mustParseVersion("1.8.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/websocket": {
+			Path:           "github.com/gorilla/websocket",
+			Current:        mustParseVersion("1.5.0"),
+			Latest:         mustParseVersion("1.5.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/stretchr/testify": {
+			Path:           "github.com/stretchr/testify",
+			Current:        mustParseVersion("1.8.0"),
+			Latest:         mustParseVersion("1.8.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/go-sql-driver/mysql": {
+			Path:           "github.com/go-sql-driver/mysql",
+			Current:        mustParseVersion("1.7.0"),
+			Latest:         mustParseVersion("1.7.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/lib/pq": {
+			Path:           "github.com/lib/pq",
+			Current:        mustParseVersion("1.10.0"),
+			Latest:         mustParseVersion("1.10.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/jinzhu/gorm": {
+			Path:           "github.com/jinzhu/gorm",
+			Current:        mustParseVersion("1.9.0"),
+			Latest:         mustParseVersion("1.9.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/golang-jwt/jwt/v4": {
+			Path:           "github.com/golang-jwt/jwt/v4",
+			Current:        mustParseVersion("4.5.0"),
+			Latest:         mustParseVersion("4.5.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/golang-migrate/migrate/v4": {
+			Path:           "github.com/golang-migrate/migrate/v4",
+			Current:        mustParseVersion("4.15.0"),
+			Latest:         mustParseVersion("4.16.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/redis/go-redis/v9": {
+			Path:           "github.com/redis/go-redis/v9",
+			Current:        mustParseVersion("9.0.0"),
+			Latest:         mustParseVersion("9.1.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/aws/aws-sdk-go-v2": {
+			Path:           "github.com/aws/aws-sdk-go-v2",
+			Current:        mustParseVersion("1.20.0"),
+			Latest:         mustParseVersion("1.21.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/google/uuid": {
+			Path:           "github.com/google/uuid",
+			Current:        mustParseVersion("1.3.0"),
+			Latest:         mustParseVersion("1.4.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/urfave/cli/v2": {
+			Path:           "github.com/urfave/cli/v2",
+			Current:        mustParseVersion("2.25.0"),
+			Latest:         mustParseVersion("2.26.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/sirupsen/logrus": {
+			Path:           "github.com/sirupsen/logrus",
+			Current:        mustParseVersion("1.9.0"),
+			Latest:         mustParseVersion("1.9.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/rs/zerolog": {
+			Path:           "github.com/rs/zerolog",
+			Current:        mustParseVersion("1.29.0"),
+			Latest:         mustParseVersion("1.30.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/valyala/fasthttp": {
+			Path:           "github.com/valyala/fasthttp",
+			Current:        mustParseVersion("1.50.0"),
+			Latest:         mustParseVersion("1.51.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/valyala/quicktemplate": {
+			Path:           "github.com/valyala/quicktemplate",
+			Current:        mustParseVersion("1.7.0"),
+			Latest:         mustParseVersion("1.7.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gofiber/fiber/v2": {
+			Path:           "github.com/gofiber/fiber/v2",
+			Current:        mustParseVersion("2.50.0"),
+			Latest:         mustParseVersion("2.51.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/labstack/echo/v4": {
+			Path:           "github.com/labstack/echo/v4",
+			Current:        mustParseVersion("4.11.0"),
+			Latest:         mustParseVersion("4.12.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/gin-contrib/cors": {
+			Path:           "github.com/gin-contrib/cors",
+			Current:        mustParseVersion("1.4.0"),
+			Latest:         mustParseVersion("1.5.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/gin-contrib/sessions": {
+			Path:           "github.com/gin-contrib/sessions",
+			Current:        mustParseVersion("0.0.5"),
+			Latest:         mustParseVersion("0.0.6"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gin-contrib/static": {
+			Path:           "github.com/gin-contrib/static",
+			Current:        mustParseVersion("0.0.1"),
+			Latest:         mustParseVersion("0.0.2"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/swaggo/gin-swagger": {
+			Path:           "github.com/swaggo/gin-swagger",
+			Current:        mustParseVersion("1.6.0"),
+			Latest:         mustParseVersion("1.7.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/swaggo/swag": {
+			Path:           "github.com/swaggo/swag",
+			Current:        mustParseVersion("1.16.0"),
+			Latest:         mustParseVersion("1.17.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/golang/protobuf": {
+			Path:           "github.com/golang/protobuf",
+			Current:        mustParseVersion("1.5.0"),
+			Latest:         mustParseVersion("1.5.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/grpc-ecosystem/grpc-gateway/v2": {
+			Path:           "github.com/grpc-ecosystem/grpc-gateway/v2",
+			Current:        mustParseVersion("2.16.0"),
+			Latest:         mustParseVersion("2.17.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/grpc-ecosystem/go-grpc-middleware": {
+			Path:           "github.com/grpc-ecosystem/go-grpc-middleware",
+			Current:        mustParseVersion("1.4.0"),
+			Latest:         mustParseVersion("1.5.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/prometheus/client_golang": {
+			Path:           "github.com/prometheus/client_golang",
+			Current:        mustParseVersion("1.16.0"),
+			Latest:         mustParseVersion("1.17.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/prometheus/client_model": {
+			Path:           "github.com/prometheus/client_model",
+			Current:        mustParseVersion("0.4.0"),
+			Latest:         mustParseVersion("0.4.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/opentracing/opentracing-go": {
+			Path:           "github.com/opentracing/opentracing-go",
+			Current:        mustParseVersion("1.2.0"),
+			Latest:         mustParseVersion("1.2.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/uber/jaeger-client-go": {
+			Path:           "github.com/uber/jaeger-client-go",
+			Current:        mustParseVersion("2.30.0"),
+			Latest:         mustParseVersion("2.31.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/uber/jaeger-lib": {
+			Path:           "github.com/uber/jaeger-lib",
+			Current:        mustParseVersion("2.4.0"),
+			Latest:         mustParseVersion("2.4.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/elastic/go-elasticsearch/v8": {
+			Path:           "github.com/elastic/go-elasticsearch/v8",
+			Current:        mustParseVersion("8.10.0"),
+			Latest:         mustParseVersion("8.11.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/olivere/elastic/v7": {
+			Path:           "github.com/olivere/elastic/v7",
+			Current:        mustParseVersion("7.0.32"),
+			Latest:         mustParseVersion("7.0.33"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/go-redis/redis/v8": {
+			Path:           "github.com/go-redis/redis/v8",
+			Current:        mustParseVersion("8.11.0"),
+			Latest:         mustParseVersion("8.11.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/go-playground/validator/v10": {
+			Path:           "github.com/go-playground/validator/v10",
+			Current:        mustParseVersion("10.14.0"),
+			Latest:         mustParseVersion("10.15.0"),
+			IsTool:         false,
+			UpdateCategory: "minor",
+			Updatable:      true,
+		},
+		"github.com/go-playground/locales": {
+			Path:           "github.com/go-playground/locales",
+			Current:        mustParseVersion("0.14.0"),
+			Latest:         mustParseVersion("0.14.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/go-playground/universal-translator": {
+			Path:           "github.com/go-playground/universal-translator",
+			Current:        mustParseVersion("0.18.0"),
+			Latest:         mustParseVersion("0.18.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/handlers": {
+			Path:           "github.com/gorilla/handlers",
+			Current:        mustParseVersion("1.5.0"),
+			Latest:         mustParseVersion("1.5.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/sessions": {
+			Path:           "github.com/gorilla/sessions",
+			Current:        mustParseVersion("1.2.0"),
+			Latest:         mustParseVersion("1.2.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/csrf": {
+			Path:           "github.com/gorilla/csrf",
+			Current:        mustParseVersion("1.7.0"),
+			Latest:         mustParseVersion("1.7.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/securecookie": {
+			Path:           "github.com/gorilla/securecookie",
+			Current:        mustParseVersion("1.1.0"),
+			Latest:         mustParseVersion("1.1.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/schema": {
+			Path:           "github.com/gorilla/schema",
+			Current:        mustParseVersion("1.2.0"),
+			Latest:         mustParseVersion("1.2.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/feeds": {
+			Path:           "github.com/gorilla/feeds",
+			Current:        mustParseVersion("1.1.0"),
+			Latest:         mustParseVersion("1.1.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/rpc": {
+			Path:           "github.com/gorilla/rpc",
+			Current:        mustParseVersion("1.2.0"),
+			Latest:         mustParseVersion("1.2.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/context": {
+			Path:           "github.com/gorilla/context",
+			Current:        mustParseVersion("1.1.0"),
+			Latest:         mustParseVersion("1.1.1"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/gorilla/pat": {
+			Path:           "github.com/gorilla/pat",
+			Current:        mustParseVersion("1.0.1"),
+			Latest:         mustParseVersion("1.0.2"),
+			IsTool:         false,
+			UpdateCategory: "patch",
+			Updatable:      true,
+		},
+		"github.com/golang/crypto": {
+			Path:           "github.com/golang/crypto",
+			Current:        mustParseVersion("0.15.0"),
+			Latest:         mustParseVersion("0.15.0"),
+			IsTool:         false,
+			UpdateCategory: "same",
+			Updatable:      false,
+		},
+		"github.com/golang/net": {
+			Path:           "github.com/golang/net",
+			Current:        mustParseVersion("0.17.0"),
+			Latest:         mustParseVersion("0.17.0"),
+			IsTool:         false,
+			UpdateCategory: "same",
+			Updatable:      false,
+		},
+		"github.com/golang/sys": {
+			Path:           "github.com/golang/sys",
+			Current:        mustParseVersion("0.13.0"),
+			Latest:         mustParseVersion("0.13.0"),
+			IsTool:         false,
+			UpdateCategory: "same",
+			Updatable:      false,
+		},
+	}
+)
+
+func mustParseVersion(v string) *semver.Version {
+	ver, err := semver.NewVersion(v)
+	if err != nil {
+		panic(err)
+	}
+	return ver
+}
+
+type getPackageListMsg struct {
+	packages []string
+	err      error
+}
+
+func getPackageList() tea.Cmd {
+	if *test {
+		time.Sleep(testDelay)
+
+		return func() tea.Msg {
+			packages := make([]string, 0, len(fakeDeps))
+			for pkg := range fakeDeps {
+				packages = append(packages, pkg)
+			}
+			return getPackageListMsg{packages, nil}
+		}
+	}
+
+	return func() tea.Msg {
+		pkgs, err := deps.ListAllModulePaths()
+		return getPackageListMsg{pkgs, err}
+	}
+}
+
+type getPackageInfoMsg struct {
+	mod deps.Module
+	err error
+}
+
+func getPkgInfo(pkg string) tea.Cmd {
+	return func() tea.Msg {
+		if *test {
+			time.Sleep(testDelay)
+
+			if mod, exists := fakeDeps[pkg]; exists {
+				return getPackageInfoMsg{mod, nil}
+			}
+			return getPackageInfoMsg{deps.Module{Path: pkg}, nil}
+		}
+
+		mod, err := deps.GetModuleInfo(pkg)
+		return getPackageInfoMsg{mod, err}
+	}
+}
+
+type changeModeListMsg bool
+
+func changeModeList() tea.Cmd {
+	return func() tea.Msg {
+		return changeModeListMsg(true)
+	}
+}
+
+type beginUpgradeMsg struct {
+	modules []deps.Module
+}
+
+type upgradeModuleResultMsg struct {
+	mod deps.Module
+	err error
+}
+
+func upgradeModule(mod deps.Module) tea.Cmd {
+	return func() tea.Msg {
+		if *test {
+			time.Sleep(testDelay)
+			// 10% simulated failure
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			if r.Float64() < 0.10 {
+				return upgradeModuleResultMsg{mod: mod, err: fmt.Errorf("simulated upgrade error")}
+			}
+			return upgradeModuleResultMsg{mod: mod, err: nil}
+		}
+
+		err := deps.Upgrade(mod)
+		return upgradeModuleResultMsg{mod: mod, err: err}
+	}
+}
