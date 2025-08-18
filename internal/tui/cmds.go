@@ -12,7 +12,7 @@ import (
 	"github.com/chaindead/modup/internal/deps"
 )
 
-const testDelay = time.Second / 100
+const testDelay = time.Second / 10
 
 var (
 	test = pflag.Bool("test", false, "fake run")
