@@ -1,7 +1,6 @@
 name: goreleaser
 
 on:
-  pull_request:
   push:
     tags:
       - "*"
@@ -12,6 +11,7 @@ permissions:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    environment: goreleaser
     steps:
       - name: Checkout
         uses: actions/checkout@v4
