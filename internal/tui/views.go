@@ -31,7 +31,7 @@ func (m model) viewScan() string {
 	n := m.packages.cnt
 	w := lipgloss.Width(fmt.Sprintf("%d", n))
 
-	pkgCount := fmt.Sprintf(" %*d/%*d", w, m.index, w, n)
+	pkgCount := fmt.Sprintf(" %*d/%*d", w, m.packages.current, w, n)
 	prog := m.progress.View()
 
 	header := prog + pkgCount
