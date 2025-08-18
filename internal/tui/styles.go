@@ -33,21 +33,3 @@ func textPrint(template string, args ...interface{}) tea.Cmd {
 
 	return tea.Println(printStyle.Render(line))
 }
-
-func printDone(m model) []tea.Cmd {
-	cmds := []tea.Cmd{
-		stepPrint("Done"),
-		textPrint("%s %d succeeded", checkMark, len(m.upgrading)),
-	}
-
-	if len(m.upgradedFailed) > 0 {
-		textPrint("%s %d failed", failMark, len(m.upgradedFailed))
-		cmds = append(cmds, stepPrint("Failed"))
-	}
-
-	for _, mod := range m.upgradedFailed {
-		cmds = append(cmds, textPrint("%s %s", failMark, mod.Path))
-	}
-
-	return cmds
-}

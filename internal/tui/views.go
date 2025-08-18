@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -27,25 +28,26 @@ func (m model) View() string {
 }
 
 func (m model) viewScan() string {
-	n := len(m.packages)
+	n := m.packages.cnt
 	w := lipgloss.Width(fmt.Sprintf("%d", n))
 
 	pkgCount := fmt.Sprintf(" %*d/%*d", w, m.index, w, n)
-
-	spin := m.spinner.View() + " "
 	prog := m.progress.View()
-	cellsAvail := max(0, m.width-lipgloss.Width(spin+prog+pkgCount))
 
-	info := "Loading modules list\n"
-	if n != 0 {
-		pkgName := currentPkgNameStyle.Render(m.packages[m.index])
-		info = lipgloss.NewStyle().MaxWidth(cellsAvail).Render("Scanning " + pkgName)
+	header := prog + pkgCount
+
+	var lines []string
+	if len(m.scanning) == 0 {
+		lines = append(lines, "Loading modules list")
+	} else {
+		for _, p := range m.scanning {
+			name := currentPkgNameStyle.Render(p)
+			lines = append(lines, m.spinner.View()+" Scanning "+name)
+		}
 	}
 
-	cellsRemaining := max(0, m.width-lipgloss.Width(spin+info+prog+pkgCount))
-	gap := strings.Repeat(" ", cellsRemaining)
-
-	return spin + info + gap + prog + pkgCount
+	body := strings.Join(lines, "\n")
+	return header + "\n" + body
 }
 
 func (m model) viewList() string {
@@ -70,4 +72,22 @@ func (m model) viewUpgrade() string {
 	gap := strings.Repeat(" ", cellsRemaining)
 
 	return spin + info + gap + prog + count
+}
+
+func (m model) printDone() []tea.Cmd {
+	cmds := []tea.Cmd{
+		stepPrint("Done"),
+		textPrint("%s %d succeeded!", checkMark, len(m.upgrading)),
+	}
+
+	if len(m.upgradedFailed) > 0 {
+		textPrint("%s %d failed", failMark, len(m.upgradedFailed))
+		cmds = append(cmds, stepPrint("Failed"))
+	}
+
+	for _, mod := range m.upgradedFailed {
+		cmds = append(cmds, textPrint("%s %s", failMark, mod.Path))
+	}
+
+	return cmds
 }

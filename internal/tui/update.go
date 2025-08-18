@@ -42,17 +42,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// get pkgs commands
 	case getPackageListMsg:
-		m.packages = msg.packages
+		m.packages = createModules(msg.packages)
 
 		cmds := []tea.Cmd{
-			stepPrint("Getting info about %d packages", len(m.packages)),
+			stepPrint("Getting info about %d packages", m.packages.cnt),
 		}
-		for _, p := range m.packages {
-			cmds = append(cmds, getPkgInfo(p))
+		for i := uint(0); i < *workerCnt; i++ {
+			cmds = append(cmds, moduleStartedCmd())
 		}
 
-		return m, tea.Sequence(cmds...)
+		return m, tea.Batch(cmds...)
+	case moduleStartedMsg:
+		pkg, ok := m.packages.next()
+		if !ok {
+			return m, nil
+		}
+
+		m.scanning = append(m.scanning, pkg)
+		return m, getPkgInfo(pkg)
 	case getPackageInfoMsg:
+		m.index++
 		if msg.mod.Updatable {
 			m.modules = append(m.modules, msg.mod)
 		}
@@ -64,21 +73,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			mark = failMark
 		}
 
-		if m.index >= len(m.packages)-1 {
-			// Do not set mode here; let changeModeListMsg initialize list and set mode
+		if m.packages.cnt == m.index {
 			return m, tea.Sequence(
 				textPrint("%s %s", mark, pkg),
 				changeModeList(),
 			)
 		}
 
-		m.index++
-		progressCmd := m.progress.SetPercent(float64(m.index) / float64(len(m.packages)))
+		progressCmd := m.progress.SetPercent(float64(m.index) / float64(m.packages.cnt))
 
-		return m, tea.Batch(
-			progressCmd,
-			textPrint("%s %s", mark, pkg),
-		)
+		// remove from scanning
+		if pkg != "" {
+			for i, p := range m.scanning {
+				if p == pkg {
+					m.scanning = append(m.scanning[:i], m.scanning[i+1:]...)
+					break
+				}
+			}
+		}
+
+		return m, tea.Batch(progressCmd, textPrint("%s %s", mark, pkg), moduleStartedCmd())
 
 	case changeModeListMsg:
 		l, items := m.newList()
@@ -127,7 +141,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				progressCmd,
 				textPrint("%s %s", mark, msg.mod.Path),
 			}
-			doneCmds = append(doneCmds, printDone(m)...)
+			doneCmds = append(doneCmds, m.printDone()...)
 			doneCmds = append(doneCmds, tea.Quit)
 
 			return m, tea.Sequence(doneCmds...)
