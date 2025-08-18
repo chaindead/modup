@@ -62,18 +62,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, getPkgInfo(pkg)
 	case getPackageInfoMsg:
 		m.packages.current++
+		m.scanning = remove(m.scanning, msg.mod.Path)
+		if msg.mod.Updatable {
+			m.modules = append(m.modules, msg.mod)
+		}
 
 		pkg := msg.mod.Path
 		mark := checkMark
-		m.scanning = remove(m.scanning, msg.mod.Path)
-
 		if msg.err != nil {
 			pkg = fmt.Sprintf("%s (%s)", msg.mod.Path, msg.err.Error())
 			mark = failMark
-		}
-
-		if msg.mod.Updatable {
-			m.modules = append(m.modules, msg.mod)
 		}
 
 		if m.packages.isFinished() {
