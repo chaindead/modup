@@ -10,6 +10,12 @@ import (
 	tui "github.com/chaindead/modup/internal/tui"
 )
 
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
+
 func main() {
 	pflag.Parse()
 
