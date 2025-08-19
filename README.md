@@ -8,7 +8,9 @@
 
 ### What is it?
 
-Interactive TUI to scan your project's Go modules for available updates and upgrade selected ones.
+Beautiful TUI to scan your project's Go modules for available updates and upgrade selected ones.
+
+![golangci-lint repo demo](./examples/demo.gif)
 
 ### Install
 
