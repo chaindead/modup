@@ -24,7 +24,7 @@ Clean terminal UI that scans your Go modules and helps you update selected depen
 - Lets you pick exactly which modules to update.
 - Applies updates one by one with clear, visual progress.
 
-Just [install](#usage) and run `modup` in project root
+Just [install](#install) and run `modup` in project root
 
 ![golangci-lint repo demo](./examples/demo.gif)
 
