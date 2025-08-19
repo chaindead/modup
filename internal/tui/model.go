@@ -37,11 +37,7 @@ type model struct {
 }
 
 func NewModel() model {
-	p := progress.New(
-		progress.WithDefaultGradient(),
-		progress.WithWidth(40),
-		progress.WithoutPercentage(),
-	)
+	p := newProgress()
 	s := spinner.New()
 	s.Spinner = spinner.MiniDot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
