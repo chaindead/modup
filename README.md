@@ -1,6 +1,7 @@
 # modup
 
 [![Release](https://img.shields.io/github/v/release/chaindead/modup?include_prereleases&sort=semver)](https://github.com/chaindead/modup/releases)
+[![](https://img.shields.io/badge/OS_Agnostic-Works_Everywhere-purple)](#install)
 [![Build](https://github.com/chaindead/modup/actions/workflows/release.yml/badge.svg)](https://github.com/chaindead/modup/actions/workflows/release.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/chaindead/modup.svg)](https://pkg.go.dev/github.com/chaindead/modup)
 [![Go Report Card](https://goreportcard.com/badge/github.com/chaindead/modup)](https://goreportcard.com/report/github.com/chaindead/modup)
@@ -10,6 +11,7 @@
 - [Install](#install)
   - [Homebrew](#homebrew)
   - [Linux](#linux)
+  - [Windows](#windows)
   - [Golang](#golang)
 - [Usage](#usage)
 - [Alternatives](#alternatives)
