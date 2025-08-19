@@ -113,11 +113,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.upgradedSucceeded = nil
 		m.upgradedFailed = nil
 		m.mode = modeUpgrade
-		m.progress = progress.New(
-			progress.WithDefaultGradient(),
-			progress.WithWidth(40),
-			progress.WithoutPercentage(),
-		)
+		m.progress = newProgress()
 
 		cmds := []tea.Cmd{
 			stepPrint("Upgrading %d packages", len(m.upgrading)),

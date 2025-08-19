@@ -19,9 +19,10 @@ type listModuleItem struct {
 }
 
 func (i listModuleItem) Title() string {
-	box := "[ ]"
+	box := "◯"
 	if i.Selected {
-		box = "[x]"
+		box = lipgloss.NewStyle().Bold(true).Render("●")
+		box = "●"
 	}
 
 	cat := lipgloss.NewStyle().Foreground(lipgloss.Color("#04B575")).Render(i.Module.UpdateCategory)
@@ -77,15 +78,15 @@ func newListKeyMap() *listKeyMap {
 	return &listKeyMap{
 		toggleItem: key.NewBinding(
 			key.WithKeys(" "),
-			key.WithHelp("space", "toggle item"),
+			key.WithHelp("space", "to select module"),
 		),
 		toggleAll: key.NewBinding(
 			key.WithKeys("a"),
-			key.WithHelp("a", "toggle all"),
+			key.WithHelp("a", "to select all"),
 		),
 		update: key.NewBinding(
 			key.WithKeys("enter", "u"),
-			key.WithHelp("enter", "update selected"),
+			key.WithHelp("enter", "to update selected"),
 		),
 	}
 }
@@ -195,15 +196,8 @@ func (m model) newList() (list.Model, []list.Item) {
 	}
 
 	l := list.New(items, d, 0, 0)
-	l.Title = "Go Modules available to upgrade"
+	l.Title = "Choose modules to upgrade"
 	l.Help = help.New()
-	l.AdditionalShortHelpKeys = func() []key.Binding {
-		return []key.Binding{
-			keys.toggleItem,
-			keys.toggleAll,
-			keys.update,
-		}
-	}
 
 	l.SetStatusBarItemName("package", "packages")
 	l.SetShowTitle(true)

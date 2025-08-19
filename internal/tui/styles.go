@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/progress"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -21,6 +22,14 @@ var (
 	printStyle          = lipgloss.NewStyle().MarginLeft(1)
 	currentPkgNameStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("211"))
 )
+
+func newProgress() progress.Model {
+	return progress.New(
+		progress.WithDefaultGradient(),
+		progress.WithWidth(40),
+		progress.WithoutPercentage(),
+	)
+}
 
 func stepPrint(template string, args ...interface{}) tea.Cmd {
 	line := stepIcon.Render() + " " + fmt.Sprintf(template, args...)
