@@ -13,8 +13,7 @@ type modules struct {
 	cnt     int
 	mu      *sync.RWMutex
 
-	queue    []string
-	scanning []string
+	queue []string
 }
 
 func createModules(packages []string) modules {
@@ -42,15 +41,4 @@ func (m modules) isFinished() bool {
 
 func (m modules) progressFloat() float64 {
 	return float64(m.current) / float64(m.cnt)
-}
-
-func remove(slice []string, s string) []string {
-	for i, p := range slice {
-		if p == s {
-			slice = append(slice[:i], slice[i+1:]...)
-			break
-		}
-	}
-
-	return slice
 }
