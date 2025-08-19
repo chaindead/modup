@@ -8,3 +8,8 @@ vars:
 tasks:
   default: go run ./...
   install: go install ./...
+  test:
+    cmds:
+      - go build -tags "fake" -o modup-test .
+      - defer: rm modup-test
+      - ./modup-test

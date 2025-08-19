@@ -7,13 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/pflag"
 
-	tui "github.com/chaindead/modup/internal/tui"
-)
-
-var (
-	version = "dev"
-	commit  = "none"
-	date    = "unknown"
+	"github.com/chaindead/modup/internal/tui"
 )
 
 func main() {

@@ -1,11 +1,14 @@
+//go:build fake
+
 package tui
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/spf13/pflag"
+	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/chaindead/modup/internal/deps"
 )
@@ -17,8 +20,6 @@ func randomTestDelay() time.Duration {
 }
 
 var (
-	test = pflag.Bool("test", false, "fake run")
-
 	fakeDeps = map[string]deps.Module{
 		"github.com/gin-gonic/gin": {
 			Path:           "github.com/gin-gonic/gin",
@@ -461,4 +462,39 @@ func mustParseVersion(v string) *semver.Version {
 		panic(err)
 	}
 	return ver
+}
+
+func getPkgInfo(pkg string) tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(randomTestDelay())
+
+		if mod, exists := fakeDeps[pkg]; exists {
+			return getPackageInfoMsg{mod, nil}
+		}
+		return getPackageInfoMsg{deps.Module{Path: pkg}, nil}
+	}
+}
+
+func upgradeModule(mod deps.Module) tea.Cmd {
+	return func() tea.Msg {
+		time.Sleep(randomTestDelay())
+		// 10% simulated failure
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		if r.Float64() < 0.10 {
+			return upgradeModuleResultMsg{mod: mod, err: fmt.Errorf("simulated upgrade error")}
+		}
+		return upgradeModuleResultMsg{mod: mod, err: nil}
+	}
+}
+
+func getPackageList() tea.Cmd {
+	time.Sleep(randomTestDelay())
+
+	return func() tea.Msg {
+		packages := make([]string, 0, len(fakeDeps))
+		for pkg := range fakeDeps {
+			packages = append(packages, pkg)
+		}
+		return getPackageListMsg{packages, nil}
+	}
 }

@@ -109,7 +109,7 @@ func newItemDelegate(keys *listKeyMap) list.DefaultDelegate {
 					item := m.Items()[idx]
 					newItem := listItemSetSelected(item, !listItemSelected(item))
 					setCmd := m.SetItem(idx, newItem)
-					statusCmd := m.NewStatusMessage(statusMessageStyle("Toggled " + newItem.(listModuleItem).Module.Path))
+					statusCmd := m.NewStatusMessage(statusMessageStyle("Selected " + newItem.(listModuleItem).Module.Path))
 					return tea.Batch(setCmd, statusCmd)
 				}
 
@@ -154,7 +154,11 @@ func newItemDelegate(keys *listKeyMap) list.DefaultDelegate {
 					}
 				}
 
-				return func() tea.Msg { return beginUpgradeMsg{modules: selected} }
+				if len(selected) == 0 {
+					return m.NewStatusMessage(statusMessageStyle("No packages selected to update"))
+				}
+
+				return beginUpgradeCmd(selected)
 			}
 		}
 
