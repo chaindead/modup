@@ -109,7 +109,12 @@ func newItemDelegate(keys *listKeyMap) list.DefaultDelegate {
 					item := m.Items()[idx]
 					newItem := listItemSetSelected(item, !listItemSelected(item))
 					setCmd := m.SetItem(idx, newItem)
-					statusCmd := m.NewStatusMessage(statusMessageStyle("Selected " + newItem.(listModuleItem).Module.Path))
+
+					selectWord := "Selected"
+					if listItemSelected(item) {
+						selectWord = "Deselected"
+					}
+					statusCmd := m.NewStatusMessage(statusMessageStyle(selectWord + " " + newItem.(listModuleItem).Module.Path))
 					return tea.Batch(setCmd, statusCmd)
 				}
 

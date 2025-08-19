@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Masterminds/semver/v3"
+	"golang.org/x/mod/modfile"
 )
 
 // Module describes a Go module upgrade candidate
@@ -31,23 +32,51 @@ type goListModule struct {
 	} `json:"Update"`
 }
 
-// ListAllModulePaths returns all module paths in the current context
+// ListAllModulePaths returns all direct (non-indirect) module paths declared in go.mod
 func ListAllModulePaths() ([]string, error) {
-	cmd := exec.Command("go", "list", "-m", "-f", "{{.Path}}", "all")
-	cmd.Env = append(os.Environ(), "GOWORK=off")
-	out, err := cmd.Output()
+	gomodPath, err := getGoModPath()
 	if err != nil {
 		return nil, err
 	}
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	var paths []string
-	for _, l := range lines {
-		l = strings.TrimSpace(l)
-		if l != "" {
-			paths = append(paths, l)
-		}
+
+	data, err := os.ReadFile(gomodPath)
+	if err != nil {
+		return nil, err
 	}
+
+	f, err := modfile.Parse(gomodPath, data, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	paths := make([]string, 0, len(f.Require))
+	seen := make(map[string]struct{})
+	for _, req := range f.Require {
+		if req == nil || req.Mod.Path == "" || req.Indirect {
+			continue
+		}
+		if _, ok := seen[req.Mod.Path]; ok {
+			continue
+		}
+		paths = append(paths, req.Mod.Path)
+		seen[req.Mod.Path] = struct{}{}
+	}
+
 	return paths, nil
+}
+
+func getGoModPath() (string, error) {
+	cmd := exec.Command("go", "env", "GOMOD")
+	cmd.Env = append(os.Environ(), "GOWORK=off")
+	out, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	path := strings.TrimSpace(string(out))
+	if path == "" || path == os.DevNull {
+		return "go.mod", nil
+	}
+	return path, nil
 }
 
 func GetModuleInfo(path string) (Module, error) {
