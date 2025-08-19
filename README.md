@@ -57,7 +57,7 @@ rm modup.tar.gz
 ```
 </details>
 
-### Go Install (from sources)
+### Golang
 
 Requires Golang 1.24+
 
