@@ -73,3 +73,11 @@ Run inside a Go project:
 modup
 ```
 
+## Alternatives
+
+- https://github.com/oligot/go-mod-upgrade — interactive module updates via browser/CLI
+- https://github.com/psampaz/go-mod-outdated — report of outdated modules
+- https://github.com/icholy/gomajor — discover available major updates
+- Renovate Bot, Dependabot — automated dependency update PRs
+- Built-ins: `go list -m -u all`, `go get -u` — basic but less controlled
+
