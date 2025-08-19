@@ -42,6 +42,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// get pkgs commands
 	case getPackageListMsg:
+		if msg.err != nil {
+			return m, tea.Batch(
+				tea.Println("list used packages:", msg.err),
+				tea.Quit,
+			)
+		}
 		m.packages = createModules(msg.packages)
 
 		cmds := []tea.Cmd{
@@ -74,16 +80,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			mark = failMark
 		}
 
-		if m.packages.isFinished() {
+		if !m.packages.isFinished() {
+			progressCmd := m.progress.SetPercent(m.packages.progressFloat())
+			return m, tea.Batch(progressCmd, textPrint("%s %s", mark, pkg), moduleStartedCmd())
+		}
+
+		if len(m.modules) == 0 {
 			return m, tea.Sequence(
-				textPrint("%s %s", mark, pkg),
-				changeModeList(),
+				stepPrint("Everything is up-to-date"),
+				tea.Quit,
 			)
 		}
 
-		progressCmd := m.progress.SetPercent(m.packages.progressFloat())
-
-		return m, tea.Batch(progressCmd, textPrint("%s %s", mark, pkg), moduleStartedCmd())
+		return m, tea.Sequence(
+			textPrint("%s %s", mark, pkg),
+			changeModeList(),
+		)
 
 	case changeModeListMsg:
 		l, items := m.newList()

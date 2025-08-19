@@ -43,6 +43,7 @@ func NewModel() model {
 		progress.WithoutPercentage(),
 	)
 	s := spinner.New()
+	s.Spinner = spinner.MiniDot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
 	return model{
 		spinner:  s,
