@@ -2,10 +2,13 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/chaindead/modup/internal/deps"
 )
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -33,7 +36,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case spinner.TickMsg:
 		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
+
+		if msg.ID == m.spinner.ID() {
+			m.spinner, cmd = m.spinner.Update(msg)
+			return m, cmd
+		}
+
+		for i := range m.scanning {
+			if msg.ID == m.scanning[i].spin.ID() {
+				m.scanning[i].spin, cmd = m.scanning[i].spin.Update(msg)
+				break
+			}
+		}
+
 		return m, cmd
 	case progress.FrameMsg:
 		progressModel, cmd := m.progress.Update(msg)
@@ -64,11 +79,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		m.scanning = append(m.scanning, pkg)
-		return m, getPkgInfo(pkg)
+		m.scanning = append(m.scanning, namedSpinner{
+			name: pkg,
+			spin: newSpinner(),
+		})
+		return m, tea.Batch(
+			getPkgInfo(pkg),
+			m.scanning.lastSpinner().Tick,
+		)
 	case getPackageInfoMsg:
 		m.packages.current++
-		m.scanning = remove(m.scanning, msg.mod.Path)
+		m.scanning = m.scanning.remove(msg.mod.Path)
 		if msg.mod.Updatable {
 			m.modules = append(m.modules, msg.mod)
 		}
@@ -91,6 +112,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				tea.Quit,
 			)
 		}
+		m.modules = sortModules(m.modules)
 
 		return m, tea.Sequence(
 			textPrint("%s %s", mark, pkg),
@@ -152,4 +174,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+var categoryMap = map[string]int{
+	"minor":      1,
+	"patch":      2,
+	"prerelease": 3,
+	"metadata":   4,
+}
+
+func sortModules(ms []deps.Module) []deps.Module {
+	sort.Slice(ms, func(i, j int) bool {
+		return categoryMap[ms[i].UpdateCategory] < categoryMap[ms[j].UpdateCategory]
+	})
+
+	return ms
 }

@@ -36,8 +36,8 @@ func (m model) viewScan() string {
 
 	var lines []string
 	for _, p := range m.scanning {
-		name := currentPkgNameStyle.Render(p)
-		lines = append(lines, m.spinner.View()+" Scanning "+name)
+		name := currentPkgNameStyle.Render(p.name)
+		lines = append(lines, p.spin.View()+" Scanning "+name)
 	}
 
 	body := strings.Join(lines, "\n")

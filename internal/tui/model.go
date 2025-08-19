@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/chaindead/modup/internal/deps"
 )
@@ -15,7 +14,7 @@ type model struct {
 	// scan mode
 	packages modules
 	modules  []deps.Module
-	scanning []string
+	scanning namedSpinners
 
 	// choose mode
 	list  list.Model
@@ -37,13 +36,9 @@ type model struct {
 }
 
 func NewModel() model {
-	p := newProgress()
-	s := spinner.New()
-	s.Spinner = spinner.MiniDot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
 	return model{
-		spinner:  s,
-		progress: p,
+		spinner:  newSpinner(),
+		progress: newProgress(),
 		scanning: nil,
 	}
 }

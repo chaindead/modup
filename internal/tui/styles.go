@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/progress"
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -29,6 +30,13 @@ func newProgress() progress.Model {
 		progress.WithWidth(40),
 		progress.WithoutPercentage(),
 	)
+}
+
+func newSpinner() spinner.Model {
+	s := spinner.New()
+	s.Spinner = spinner.MiniDot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("63"))
+	return s
 }
 
 func stepPrint(template string, args ...interface{}) tea.Cmd {
