@@ -11,5 +11,5 @@ tasks:
   test:
     cmds:
       - go build -tags "fake" -o modup-test .
-      - defer: rm modup-test
+#      - defer: rm modup-test
       - ./modup-test
