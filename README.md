@@ -7,6 +7,13 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fchaindead%2Fmodup&label=Visitors&labelColor=%23d9e3f0&countColor=%23697689&style=flat&labelStyle=none)
 
+- [Install](#install)
+  - [Homebrew](#homebrew)
+  - [Linux](#linux)
+  - [Golang](#golang)
+- [Usage](#usage)
+- [Alternatives](#alternatives)
+
 ## What is it?
 
 Clean terminal UI that scans your Go modules and helps you update selected dependencies intentionally. Built with Bubble Tea, it's responsive, fast, and pleasant to use right in your terminal.
@@ -55,6 +62,16 @@ sudo chmod +x /usr/local/bin/modup
 # Clean up
 rm modup.tar.gz
 ```
+</details>
+
+### Windows
+
+<details>
+1. Download the latest release for your architecture:
+    - [Windows x64](https://github.com/chaindead/modup/releases/latest/download/modup_Windows_x86_64.zip)
+    - [Windows ARM64](https://github.com/chaindead/modup/releases/latest/download/modup_Windows_arm64.zip)
+2. Extract the `.zip` file
+3. Add the extracted directory to your PATH or move `modup.exe` to a directory in your PATH
 </details>
 
 ### Golang
