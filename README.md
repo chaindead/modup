@@ -1,12 +1,11 @@
 # modup
 
-[![](https://img.shields.io/badge/OS_Agnostic-Works_Everywhere-purple)](#install)
 [![Release](https://img.shields.io/github/v/release/chaindead/modup?include_prereleases&sort=semver)](https://github.com/chaindead/modup/releases)
-[![Build](https://github.com/chaindead/modup/actions/workflows/release.yml/badge.svg)](https://github.com/chaindead/modup/actions/workflows/release.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/chaindead/modup.svg)](https://pkg.go.dev/github.com/chaindead/modup)
+[![Github All Releases](https://img.shields.io/github/downloads/chaindead/modup/total.svg)](#install)
 [![Go Report Card](https://goreportcard.com/badge/github.com/chaindead/modup)](https://goreportcard.com/report/github.com/chaindead/modup)
+[![Build](https://github.com/chaindead/modup/actions/workflows/release.yml/badge.svg)](https://github.com/chaindead/modup/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fchaindead%2Fmodup&label=Visitors&labelColor=%23d9e3f0&countColor=%23697689&style=flat&labelStyle=none)](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fchaindead%2Fmodup)
+[![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2Fchaindead%2Fmodup&label=visitors&labelColor=%23d9e3f0&countColor=%23697689&style=flat&labelStyle=none)](https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2Fchaindead%2Fmodup)
 
 - [Install](#install)
   - [Homebrew](#homebrew)
