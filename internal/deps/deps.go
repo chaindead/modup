@@ -80,7 +80,7 @@ func getGoModPath() (string, error) {
 }
 
 func GetModuleInfo(path string) (Module, error) {
-	cmd := exec.Command("go", "list", "-m", "-u", "-json", path)
+	cmd := exec.Command("go", "list", "-m", "-u", "-mod=readonly", "-json", path)
 	cmd.Env = append(os.Environ(), "GOWORK=off")
 	out, err := cmd.Output()
 	if err != nil {
